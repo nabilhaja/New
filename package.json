@@ -1,11 +1,11 @@
 {
-  "name": "github-mcp-server",
+  "name": "bip-mcp-server",
   "version": "1.0.0",
-  "description": "MCP server exposing GitHub actions to LLM clients, authenticated via a GitHub OAuth App (Device Flow).",
+  "description": "MCP server exposing the BiP Intelligence Platform (Tracker) Open API — notices, awards, and spend data — as tools for LLM clients.",
   "type": "module",
   "main": "dist/index.js",
   "bin": {
-    "github-mcp-server": "dist/index.js"
+    "bip-mcp-server": "dist/index.js"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -15,7 +15,6 @@
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",
-    "@octokit/rest": "^21.1.1",
     "dotenv": "^16.4.5",
     "zod": "^3.24.1"
   },
