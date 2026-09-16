@@ -123,3 +123,28 @@ Free-tier Render services spin down after inactivity and take a few seconds
 to cold-start on the next request — fine for occasional use, not for
 latency-sensitive workloads. Upgrade the plan in `render.yaml` if that
 matters for your use case.
+
+### Connecting from claude.ai / Claude Desktop (custom connector)
+
+Claude's custom connector UI requires the server to support OAuth 2.1
+discovery — it won't accept a bare bearer token pasted into a field. This
+server implements the minimal pieces needed for that (RFC 8414 metadata,
+RFC 7591 dynamic client registration, and an authorization-code + PKCE
+flow), so you don't need to fill in the "Use your own OAuth client" form at
+all:
+
+1. In Claude: **Settings > Connectors > Add custom connector**.
+2. Enter your server's MCP URL: `https://<service-name>.onrender.com/mcp`.
+3. Claude auto-discovers the OAuth endpoints and registers itself as a
+   client — you shouldn't see a manual client ID/secret screen.
+4. You'll land on a login page asking for a token — enter your
+   `MCP_AUTH_TOKEN` there (this is a one-time login step, not per-request).
+5. Claude exchanges that for a short-lived access token (1 hour) and a
+   refresh token (90 days) and stores them itself; you won't need to touch
+   `MCP_AUTH_TOKEN` again unless the server restarts and you want to
+   re-authorize sooner.
+
+Note: OAuth state (issued codes/tokens, registered clients) is kept
+in-memory only, so a server restart (e.g. a Render redeploy) invalidates
+any in-flight authorization and requires reconnecting the connector. Your
+raw `MCP_AUTH_TOKEN` env var itself is unaffected by restarts.
