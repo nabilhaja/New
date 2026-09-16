@@ -83,3 +83,43 @@ sandbox equivalent, discovered via
 `https://sandbox.oidc.bipintelligence.com/.well-known/openid-configuration`),
 caches it in memory, and automatically re-requests a new one shortly before
 it expires (tokens are valid ~15 minutes). No token is ever written to disk.
+
+## Running as a hosted server (Streamable HTTP)
+
+By default the server speaks MCP over stdio, for clients that launch it as a
+local subprocess. To expose it over the network at a real URL instead, set
+`MCP_TRANSPORT=http` — this switches it to the
+[Streamable HTTP](https://modelcontextprotocol.io/docs/concepts/transports#streamable-http)
+transport, serving the MCP endpoint at `POST /mcp` and a health check at
+`GET /healthz`.
+
+Since this hands out access to your BiP credentials and their **10
+calls/day** production quota, the HTTP mode requires a bearer token:
+requests must include `Authorization: Bearer <MCP_AUTH_TOKEN>`, or they're
+rejected with 401 before touching BiP at all. Generate one with
+`openssl rand -hex 32` and keep it secret — it's your server's only access
+control.
+
+```bash
+MCP_TRANSPORT=http MCP_AUTH_TOKEN=<random secret> npm start
+```
+
+### Deploying to Render
+
+This repo includes a `Dockerfile` and `render.yaml` [Blueprint](https://render.com/docs/blueprint-spec)
+for a one-click deploy on Render's free tier:
+
+1. Push this repo to GitHub (already done if you're reading this from there).
+2. In the Render dashboard: **New > Blueprint**, point it at this repo.
+3. Render reads `render.yaml` and provisions a web service automatically. Fill
+   in the secret env vars it prompts for: `MCP_AUTH_TOKEN`, and (if not using
+   the sandbox) `BIP_CLIENT_ID` / `BIP_CLIENT_SECRET`.
+4. Once deployed, your MCP server's URL is `https://<service-name>.onrender.com/mcp`.
+
+Point a remote MCP client at that URL with header
+`Authorization: Bearer <your MCP_AUTH_TOKEN>`.
+
+Free-tier Render services spin down after inactivity and take a few seconds
+to cold-start on the next request — fine for occasional use, not for
+latency-sensitive workloads. Upgrade the plan in `render.yaml` if that
+matters for your use case.
